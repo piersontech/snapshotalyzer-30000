@@ -21,8 +21,10 @@ def has_pending_snapshot(volume):
     return snapshots and snapshots[0].state == 'pending'
 
 @click.group()
+
 def cli():
     """Shotty manages snapshots"""
+
 
 @cli.group('snapshots')
 def snapshots():
@@ -139,7 +141,7 @@ def list_instances(project):
 @click.option('--project', default=None, help="Only instances for project (tag Project:<name>)")
 @click.option('--force', 'force_flag', default=False, is_flag=True,
               help="Forces operation if project is not specified")
-def stop_instances(project):
+def stop_instances(project, force_flag):
     "Stop EC2 instances"
     if not project and not force_flag:
         print("Cannot create snapshots unless project is specified or force is specified")
@@ -163,7 +165,7 @@ def stop_instances(project):
 @click.option('--project', default=None, help="Only instances for project (tag Project:<name>)")
 @click.option('--force', 'force_flag', default=False, is_flag=True,
               help="Forces operation if project is not specified")
-def start_instances(project):
+def start_instances(project, force_flag):
     "Start EC2 instances"
     if not project and not force_flag:
         print("Cannot create snapshots unless project is specified or force is specified")
@@ -187,7 +189,7 @@ def start_instances(project):
 @click.option('--project', default=None, help="Only instances for project (tag Project:<name>)")
 @click.option('--force', 'force_flag', default=False, is_flag=True,
               help="Forces operation if project is not specified")
-def reboot_instances(project):
+def reboot_instances(project, force_flag):
     "Reboot EC2 instances"
     if not project and not force_flag:
         print("Cannot create snapshots unless project is specified or force is specified")
