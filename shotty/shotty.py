@@ -81,8 +81,14 @@ def instances():
 
 @instances.command('snapshot', help="Create snapshots of all volumes")
 @click.option('--project', default=None, help="Only instances for project (tag Project:<name>)")
-def create_snapshots(project):
+@click.option('--force', 'force_flag', default=False, is_flag=True,
+              help="Forces operation if project is not specified")
+def create_snapshots(project, force_flag):
     "Create snapshots for EC2 instances"
+    if not project and not force_flag:
+        print("Cannot create snapshots unless project is specified or force is specified")
+        return
+    
     instances = []
     
     instances = filter_instances(project)
@@ -131,8 +137,14 @@ def list_instances(project):
 
 @instances.command('stop')
 @click.option('--project', default=None, help="Only instances for project (tag Project:<name>)")
+@click.option('--force', 'force_flag', default=False, is_flag=True,
+              help="Forces operation if project is not specified")
 def stop_instances(project):
     "Stop EC2 instances"
+    if not project and not force_flag:
+        print("Cannot create snapshots unless project is specified or force is specified")
+        return
+
     instances=[]
 
     instances = filter_instances(project)
@@ -149,8 +161,14 @@ def stop_instances(project):
 
 @instances.command('start')
 @click.option('--project', default=None, help="Only instances for project (tag Project:<name>)")
+@click.option('--force', 'force_flag', default=False, is_flag=True,
+              help="Forces operation if project is not specified")
 def start_instances(project):
     "Start EC2 instances"
+    if not project and not force_flag:
+        print("Cannot create snapshots unless project is specified or force is specified")
+        return
+    
     instances=[]
     
     instances = filter_instances(project)
@@ -167,8 +185,14 @@ def start_instances(project):
 
 @instances.command('reboot')
 @click.option('--project', default=None, help="Only instances for project (tag Project:<name>)")
+@click.option('--force', 'force_flag', default=False, is_flag=True,
+              help="Forces operation if project is not specified")
 def reboot_instances(project):
     "Reboot EC2 instances"
+    if not project and not force_flag:
+        print("Cannot create snapshots unless project is specified or force is specified")
+        return
+    
     instances=[]
     
     instances = filter_instances(project)
@@ -181,7 +205,7 @@ def reboot_instances(project):
             print("  Could not reboot {0}. ".format(i.id) + str(e))
             continue
 
-return
+    return
 
 
 if __name__ =='__main__':
