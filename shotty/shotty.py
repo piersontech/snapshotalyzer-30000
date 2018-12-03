@@ -5,6 +5,12 @@ import botocore
 session = boto3.Session(profile_name='shotty')
 ec2 = session.resource('ec2')
 
+def single_instance(instance_name):
+    instances=[]
+    filters = [{'Name':'instance-id', 'Values':[instance_name]}]
+    instances=ec2.instances.filter(Filters=filters)
+
+    return instances
 
 def filter_instances(project):
     instances = []
@@ -37,11 +43,16 @@ def snapshots():
 @click.option('--project', default=None, help="Only snapshots for project (tag Project:<name>)")
 @click.option('--all', 'list_all', default=False, is_flag=True,
               help="List all snapshots for each volume, not just the most recent")
-def list_snapshots(project, list_all):
+@click.option('--instance', default=None, help="Specify instance to operate on, overrides project flag")
+def list_snapshots(project, list_all, instance):
     "List snapshots"
     instances = []
     
-    instances = filter_instances(project)
+    if instance:
+        instances = single_instance(instance)
+    else:
+        instances = filter_instances(project)
+
     for i in instances:
         for v in i.volumes.all():
             for s in v.snapshots.all():
@@ -63,11 +74,15 @@ def volumes():
 
 @volumes.command('list')
 @click.option('--project', default=None, help="Only volumes for project (tag Project:<name>)")
-def list_volumes(project):
+@click.option('--instance', default=None, help="Specify instance to operate on, overrides project flag")
+def list_volumes(project,instance):
     "List volumes"
     instances = []
 
-    instances = filter_instances(project)
+    if instance:
+        instances = single_instance(instance)
+    else:
+        instances = filter_instances(project)
 
     for i in instances:
         for v in i.volumes.all():
@@ -88,15 +103,19 @@ def instances():
 @click.option('--project', default=None, help="Only instances for project (tag Project:<name>)")
 @click.option('--force', 'force_flag', default=False, is_flag=True,
               help="Forces operation if project is not specified")
-def create_snapshots(project, force_flag):
+@click.option('--instance', default=None, help="Specify instance to operate on, overrides project flag")
+def create_snapshots(project, force_flag,instance):
     "Create snapshots for EC2 instances"
     if not project and not force_flag:
         print("Cannot create snapshots unless project is specified or force is specified")
         return
     
     instances = []
-    
-    instances = filter_instances(project)
+
+    if instance:
+        instances = single_instance(instance)
+    else:
+        instances = filter_instances(project)
 
     for i in instances:
         print("Stopping {0}...".format(i.id))
@@ -116,7 +135,7 @@ def create_snapshots(project, force_flag):
                 continue
 
         print("Starting {0}...".format(i.id))
-                
+        
         i.start()
         i.wait_until_running()
 
@@ -126,11 +145,15 @@ def create_snapshots(project, force_flag):
 
 @instances.command('list')
 @click.option('--project', default=None, help="Only instances for project (tag Project:<name>)")
-def list_instances(project):
+@click.option('--instance', default=None, help="Specify instance to operate on, overrides project flag")
+def list_instances(project,instance):
     "List instances"
     instances = []
     
-    instances = filter_instances(project)
+    if instance:
+        instances = single_instance(instance)
+    else:
+        instances = filter_instances(project)
 
     for i in instances:
         tags = { t['Key']: t['Value'] for t in i.tags or []}
@@ -148,6 +171,7 @@ def list_instances(project):
 @click.option('--project', default=None, help="Only instances for project (tag Project:<name>)")
 @click.option('--force', 'force_flag', default=False, is_flag=True,
               help="Forces operation if project is not specified")
+@click.option('--instance', default=None, help="Specify instance to operate on, overrides project flag")
 def stop_instances(project, force_flag):
     "Stop EC2 instances"
     if not project and not force_flag:
@@ -156,7 +180,10 @@ def stop_instances(project, force_flag):
 
     instances=[]
 
-    instances = filter_instances(project)
+    if instance:
+        instances = single_instance(instance)
+    else:
+        instances = filter_instances(project)
     
     for i in instances:
         print("Stopping {0}...".format(i.id))
@@ -172,7 +199,8 @@ def stop_instances(project, force_flag):
 @click.option('--project', default=None, help="Only instances for project (tag Project:<name>)")
 @click.option('--force', 'force_flag', default=False, is_flag=True,
               help="Forces operation if project is not specified")
-def start_instances(project, force_flag):
+@click.option('--instance', default=None, help="Specify instance to operate on, overrides project flag")
+def start_instances(project, force_flag,instance):
     "Start EC2 instances"
     if not project and not force_flag:
         print("Cannot create snapshots unless project is specified or force is specified")
@@ -180,7 +208,10 @@ def start_instances(project, force_flag):
     
     instances=[]
     
-    instances = filter_instances(project)
+    if instance:
+        instances = single_instance(instance)
+    else:
+        instances = filter_instances(project)
     
     for i in instances:
         print("Starting {0}...".format(i.id))
@@ -196,7 +227,8 @@ def start_instances(project, force_flag):
 @click.option('--project', default=None, help="Only instances for project (tag Project:<name>)")
 @click.option('--force', 'force_flag', default=False, is_flag=True,
               help="Forces operation if project is not specified")
-def reboot_instances(project, force_flag):
+@click.option('--instance', default=None, help="Specify instance to operate on, overrides project flag")
+def reboot_instances(project, force_flag,instance):
     "Reboot EC2 instances"
     if not project and not force_flag:
         print("Cannot create snapshots unless project is specified or force is specified")
@@ -204,7 +236,10 @@ def reboot_instances(project, force_flag):
     
     instances=[]
     
-    instances = filter_instances(project)
+    if instance:
+        instances = single_instance(instance)
+    else:
+        instances = filter_instances(project)
     
     for i in instances:
         print("Rebooting {0}...".format(i.id))
