@@ -106,8 +106,8 @@ def instances():
 @click.option('--instance', default=None, help="Specify instance to operate on, overrides project flag")
 def create_snapshots(project, force_flag,instance):
     "Create snapshots for EC2 instances"
-    if not project and not force_flag:
-        print("Cannot create snapshots unless project is specified or force is specified")
+    if not project and not instance and not force_flag:
+        print("Cannot create snapshots unless project, istance or force is specified")
         return
     
     instances = []
