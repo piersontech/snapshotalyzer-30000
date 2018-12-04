@@ -120,6 +120,7 @@ def create_snapshots(project, force_flag,instance):
     for i in instances:
         print("Stopping {0}...".format(i.id))
         
+        previous_state = i.state['Name']
         i.stop()
         i.wait_until_stopped()
 
@@ -130,14 +131,15 @@ def create_snapshots(project, force_flag,instance):
             print("  Creating snapshot of {0}".format(v.id))
             try:
                 v.create_snapshot(Description="Created by SnapshotAlyzer 30000")
-            except botocore.exceptions.ClientError:
+            except botocore.exceptions.ClientError as e:
                 print("  Error generating snapshot for {0}, skipping. ".format(v.id) + str(e))
                 continue
 
-        print("Starting {0}...".format(i.id))
         
-        i.start()
-        i.wait_until_running()
+        if previous_state == 'running':
+            print("Starting {0}...".format(i.id))
+            i.start()
+            i.wait_until_running()
 
     print("Job's done!")
 
