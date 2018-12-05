@@ -1,6 +1,7 @@
 import boto3
 import click
 import botocore
+from datetime import datetime, timezone
 
 session = boto3.Session(profile_name='shotty')
 ec2 = session.resource('ec2')
@@ -26,6 +27,12 @@ def filter_instances(project):
 def has_pending_snapshot(volume):
     snapshots = list(volume.snapshots.all())
     return snapshots and snapshots[0].state == 'pending'
+
+def has_newer_snapshot(volume,age):
+    today = datetime.now(timezone.utc)
+    snaps = list(volume.snapshots.all())
+    snap_age = today - snaps[0].start_time
+    return snap_age.days < age
 
 @click.group()
 @click.option('--profile', default='shotty', help="Specify an alternate profile for AWS session")
@@ -104,13 +111,15 @@ def instances():
 @click.option('--force', 'force_flag', default=False, is_flag=True,
               help="Forces operation if project is not specified")
 @click.option('--instance', default=None, help="Specify instance to operate on, overrides project flag")
-def create_snapshots(project, force_flag,instance):
+@click.option('--age', default=0, help="Specify an 'older than' age for creating a new snapshot, in days")
+def create_snapshots(project, force_flag,instance,age):
     "Create snapshots for EC2 instances"
     if not project and not instance and not force_flag:
         print("Cannot create snapshots unless project, istance or force is specified")
         return
     
     instances = []
+
 
     if instance:
         instances = single_instance(instance)
@@ -127,6 +136,9 @@ def create_snapshots(project, force_flag,instance):
         for v in i.volumes.all():
             if has_pending_snapshot(v):
                 print("  Skipping {0}, snapshot already in progress.".format(v.id))
+                continue
+            if has_newer_snapshot(v,age):
+                print("  Skipping {0}, already has a snapshot less than {1} days old.".format(v.id,age))
                 continue
             print("  Creating snapshot of {0}".format(v.id))
             try:
