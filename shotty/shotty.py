@@ -3,8 +3,10 @@ import click
 import botocore
 from datetime import datetime, timezone
 
-session = boto3.Session(profile_name='shotty')
-ec2 = session.resource('ec2')
+#session = boto3.Session(profile_name='shotty')
+#ec2 = session.resource('ec2')
+session = None
+ec2 = None
 
 def single_instance(instance_name):
     instances=[]
@@ -36,9 +38,17 @@ def has_newer_snapshot(volume,age):
 
 @click.group()
 @click.option('--profile', default='shotty', help="Specify an alternate profile for AWS session")
-def cli(profile):
+@click.option('--region', default='', help="Specify an alternate region for AWS session")
+def cli(profile, region):
     """Shotty manages snapshots"""
-    session = boto3.Session(profile_name=profile)
+    global session, ec2
+
+    print ("In cli, profile is {0} and region is {1}".format(profile,region))
+    if region:
+        session = boto3.Session(profile_name=profile,region_name=region)
+        print ("Executed with region")
+    else:
+        session = boto3.Session(profile_name=profile)
     ec2 = session.resource('ec2')
 
 
