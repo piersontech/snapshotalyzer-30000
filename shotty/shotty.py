@@ -115,7 +115,7 @@ def instances():
 def create_snapshots(project, force_flag,instance,age):
     "Create snapshots for EC2 instances"
     if not project and not instance and not force_flag:
-        print("Cannot create snapshots unless project, istance or force is specified")
+        print("Cannot create snapshots unless project, instance or force is specified")
         return
     
     instances = []
@@ -127,11 +127,10 @@ def create_snapshots(project, force_flag,instance,age):
         instances = filter_instances(project)
 
     for i in instances:
-        print("Stopping {0}...".format(i.id))
+        print("Checking {0}...".format(i.id))
         
         previous_state = i.state['Name']
-        i.stop()
-        i.wait_until_stopped()
+       
 
         for v in i.volumes.all():
             if has_pending_snapshot(v):
@@ -140,6 +139,10 @@ def create_snapshots(project, force_flag,instance,age):
             if has_newer_snapshot(v,age):
                 print("  Skipping {0}, already has a snapshot less than {1} days old.".format(v.id,age))
                 continue
+            if i.state['Name'] == 'running':
+                print(" Stopping {0}...".format(i.id))
+                i.stop()
+                i.wait_until_stopped()
             print("  Creating snapshot of {0}".format(v.id))
             try:
                 v.create_snapshot(Description="Created by SnapshotAlyzer 30000")
@@ -186,10 +189,10 @@ def list_instances(project,instance):
 @click.option('--force', 'force_flag', default=False, is_flag=True,
               help="Forces operation if project is not specified")
 @click.option('--instance', default=None, help="Specify instance to operate on, overrides project flag")
-def stop_instances(project, force_flag):
+def stop_instances(project, force_flag,instance):
     "Stop EC2 instances"
-    if not project and not force_flag:
-        print("Cannot create snapshots unless project is specified or force is specified")
+    if not project and not instance and not force_flag:
+        print("Cannot stop instances unless project, instance or force is specified")
         return
 
     instances=[]
@@ -216,10 +219,10 @@ def stop_instances(project, force_flag):
 @click.option('--instance', default=None, help="Specify instance to operate on, overrides project flag")
 def start_instances(project, force_flag,instance):
     "Start EC2 instances"
-    if not project and not force_flag:
-        print("Cannot create snapshots unless project is specified or force is specified")
+    if not project and not instance and not force_flag:
+        print("Cannot start instances unless project, instance or force is specified")
         return
-    
+
     instances=[]
     
     if instance:
@@ -244,10 +247,10 @@ def start_instances(project, force_flag,instance):
 @click.option('--instance', default=None, help="Specify instance to operate on, overrides project flag")
 def reboot_instances(project, force_flag,instance):
     "Reboot EC2 instances"
-    if not project and not force_flag:
-        print("Cannot create snapshots unless project is specified or force is specified")
+    if not project and not instance and not force_flag:
+        print("Cannot reboot instances unless project, instance or force is specified")
         return
-    
+
     instances=[]
     
     if instance:
